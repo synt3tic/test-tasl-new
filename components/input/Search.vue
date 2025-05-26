@@ -6,6 +6,7 @@
       type="text"
       :placeholder="placeholder"
       class="app-input__text"
+      ref="inputSearch"
     />
   </div>
 </template>
@@ -22,6 +23,7 @@ const props = defineProps({
     default: "Enter text",
   },
 });
+const input = useTemplateRef('inputSearch');
 
 const value = computed({
   get() {
@@ -41,6 +43,10 @@ const value = computed({
   border: 1px solid gray;
   border-radius: 10px;
   padding: 10px;
+
+  &:focus-within {
+    border-color: chocolate;
+  }
 
   &__icon {
     color: gray;

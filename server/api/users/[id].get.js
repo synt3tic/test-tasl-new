@@ -1,0 +1,8 @@
+export default defineEventHandler(async (event) => {
+    return await $fetch(`https://jsonplaceholder.typicode.com/users/${event.context.params.id}`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+});

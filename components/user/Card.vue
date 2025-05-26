@@ -1,7 +1,7 @@
 <template>
-  <NuxtLink class="user-card">
+  <NuxtLink :to="userPageLink" class="user-card">
     <p>{{ user.name }}</p>
-    <span>{{ user.email }}</span>
+    <a :href="userEmailLink">{{ user.email }}</a>
   </NuxtLink>
 </template>
 
@@ -12,6 +12,9 @@ const props = defineProps({
     required: true,
   },
 });
+
+const userEmailLink = computed(() => `mailto:${props.user.email}`);
+const userPageLink = computed(() => `/user/${props.user.id}`)
 </script>
 
 <style lang="scss" scoped>

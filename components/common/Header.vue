@@ -1,8 +1,12 @@
 <template>
   <div class="app-header">
-    <h1>Page Title</h1>
+    <h1>{{ route.meta.title }}</h1>
   </div>
 </template>
+
+<script setup lang="ts">
+const route = useRoute();
+</script>
 
 <style lang="scss" scoped>
 .app-header {

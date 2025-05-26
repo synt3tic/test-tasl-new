@@ -1,16 +1,37 @@
 <template>
   <div class="home-page">
-    <InputSearch v-model="test" placeholder="Enter text" />
+    <InputSearch v-model="search" placeholder="Enter text" ref="inputSearch" />
     <div class="home-page__users-list">
-      <UserCard v-for="user in users" :key="user.id" :user="user" />
+      <UserCard v-for="user in filteredList" :key="user.id" :user="user" />
     </div>
   </div>
 </template>
 
 <script setup>
 const PAGE_TITLE = "Home Page";
-const users = ref([]);
-const test = ref("test");
+const search = ref("");
+
+const { data: users } = useFetch('/api/users');
+
+const inputSearch = useTemplateRef('inputSearch');
+
+const filteredList = computed(() => {
+  if (search.value.length < 3) {
+    return users.value;
+  }
+
+  return users.value.filter(user => {
+    const searchStr = search.value.toLowerCase();
+    const emailStr = user.email.toLowerCase();
+    const nameStr = user.name.toLowerCase();
+
+    return emailStr.includes(searchStr) || nameStr.includes(searchStr)
+  })
+});
+
+onMounted(() => {
+  inputSearch.value?.$refs.inputSearch.focus();
+});
 
 useHead({
   title: PAGE_TITLE,
@@ -20,10 +41,6 @@ useHead({
       content: "This is the home page of the application.",
     },
   ],
-});
-
-onMounted(async () => {
-  users.value = await $fetch("/api/users");
 });
 </script>
 
