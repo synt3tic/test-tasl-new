@@ -1,85 +1,166 @@
 <template>
   <div class="user">
-    <h1 class="user__name">
-      {{ user?.name }}
-    </h1>
+    <template v-if="data">
+      <h1 class="user__name">{{ data.user?.name }}</h1>
+      <p class="user__username">@{{ data.user?.username }}</p>
 
-    <p class="user__username">
-      {{ user?.username }}
-    </p>
+      <a class="user__email" :href="userEmailLink">{{ data.user?.email }}</a>
+      <p class="user__address">{{ userAddressString }}</p>
+      <a class="user__phone" :href="userPhoneLink">{{ data.user?.phone }}</a>
 
-    <a :href="userEmailLink">{{ user?.email }}</a>
+      <a
+        v-if="data.user?.website"
+        class="user__website"
+        :href="`https://${data.user.website}`"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {{ data.user.website }}
+      </a>
 
-    <p class="user__address">{{ userAddressString }}</p>
+      <section v-if="data.albums?.length" class="albums">
+        <h2 class="albums__title">Альбомы</h2>
+        <details
+          v-for="album in data.albums"
+          :key="album.id"
+          class="albums__item"
+        >
+          <summary class="albums__summary">{{ album.title }}</summary>
+          <ul class="albums__photos">
+            <li
+              v-for="photo in data.albumPhotos[album.id]"
+              :key="photo.id"
+              class="albums__photo"
+            >
+              <img :src="photo.thumbnailUrl" :alt="photo.title" />
+            </li>
+          </ul>
+        </details>
+      </section>
+    </template>
 
-    <a :href="userPhoneLink">{{ user?.phone }}</a>
-
-    <a v-if="user?.website" :href="user.website" target="_blank">{{ user.website }}</a>
-
-    <div v-if="albums" class="albums">
-      <details v-for="album in albums" class="albums__album">
-        <summary>{{ album.title }}</summary>
-      </details>
-    </div>
+    <template v-else>
+      <p>Загрузка...</p>
+    </template>
   </div>
 </template>
 
 <script setup>
-const route = useRoute();
+import { useAsyncData } from '#app'
 
-const { data: user } = useFetch(`/api/users/${route.params.id}`);
-const { data: albums } = useFetch(`/api/albums/${route.params.id}`);
-const { data: photos } = useFetch(`/api/albums/${route.params.id}/photos`);
+const route = useRoute()
 
-const userEmailLink = computed(() => `mailto:${user.value?.email}`);
-const userPhoneLink = computed(() => `tel:${user.value?.phone}`);
+const { data } = await useAsyncData('userPage', async () => {
+  const [user, albums] = await Promise.all([
+    $fetch(`/api/users/${route.params.id}`),
+    $fetch(`/api/albums/${route.params.id}`),
+  ])
+
+  const albumPhotos = {}
+
+  await Promise.all(
+    albums.map(async (album) => {
+      albumPhotos[album.id] = await $fetch(`/api/albums/${album.id}/photos`)
+    })
+  )
+
+  return { user, albums, albumPhotos }
+})
+
+const userEmailLink = computed(() =>
+  data.value?.user?.email ? `mailto:${data.value.user.email}` : '#'
+)
+const userPhoneLink = computed(() =>
+  data.value?.user?.phone ? `tel:${data.value.user.phone}` : '#'
+)
 const userAddressString = computed(() => {
-  if (!user.value) {
-    return '';
-  }
-
-  const keys = ['city', 'street', 'suite', 'zipcode'];
-
-  return keys.reduce((acc, key) => {
-    acc += `${user.value.address[key]}, `;
-
-    return acc;
-  }, '');
+  const address = data.value?.user?.address
+  return address
+    ? `${address.city}, ${address.street}, ${address.suite}, ${address.zipcode}`
+    : ''
 })
 </script>
 
 <style lang="scss" scoped>
 .user {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 1rem;
 
   &__name {
-    font-size: 1.2rem;
+    font-size: 2rem;
+    font-weight: bold;
+    margin-bottom: 0.25rem;
   }
 
-  &__username, &__email {
-    font-size: 1rem;
+  &__username {
+    font-size: 1.1rem;
+    color: #666;
   }
 
-  &__email {
-    color: darkblue;
+  &__email,
+  &__phone,
+  &__website {
+    color: #0056b3;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
   }
 
   &__address {
-    font-size: .8rem;
-    color: gray;
+    font-size: 0.9rem;
+    color: #555;
   }
 }
 
 .albums {
+  margin-top: 2rem;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
+  gap: 1rem;
 
-.albums__album {
-  padding: 1rem;
-  border: 1px solid gray;
+  &__title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  &__item {
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 1rem;
+    background: #f9f9f9;
+
+    summary {
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 0.5rem;
+    }
+  }
+
+  &__photos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+
+    li {
+      width: 100px;
+      height: 100px;
+      overflow: hidden;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+  }
 }
 </style>
