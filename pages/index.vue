@@ -8,7 +8,6 @@
 </template>
 
 <script setup>
-const PAGE_TITLE = "Home Page";
 const search = ref("");
 
 const { data: users } = useFetch('/api/users');
@@ -32,6 +31,12 @@ const filteredList = computed(() => {
 onMounted(() => {
   inputSearch.value?.$refs.inputSearch.focus();
 });
+
+const PAGE_TITLE = "Home Page";
+
+definePageMeta({
+    title: PAGE_TITLE,
+})
 
 useHead({
   title: PAGE_TITLE,

@@ -1,11 +1,12 @@
 <template>
   <div class="app-header">
-    <h1>{{ route.meta.title }}</h1>
+    <h1>{{ title }}</h1>
   </div>
 </template>
 
 <script setup lang="ts">
 const route = useRoute();
+const title = computed(() => route.meta.title);
 </script>
 
 <style lang="scss" scoped>
